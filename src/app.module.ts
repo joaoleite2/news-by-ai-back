@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
+import { NewsModule } from './news/news.module';
 
 @Module({
-  imports: [],
+  imports: [NewsModule],
   controllers: [],
   providers: [],
 })
