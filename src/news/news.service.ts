@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
 import { GoogleGenAI } from "@google/genai";
@@ -15,7 +15,7 @@ export class NewsService {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
-  async create(createNewsDto: CreateNewsDto) {
+  async generateNews(createNewsDto: CreateNewsDto) {
     const groundingTool = {
       googleSearch: {}
     }
@@ -24,36 +24,59 @@ export class NewsService {
       tools: [groundingTool],
     }
     
+    console.log('Chave da API:', process.env.GEMINI_API_KEY ? 'Configurada' : 'Não configurada');
+    const prompt = process.env.GEMINI_IGNITION_PROMPT;
+    if(!prompt) throw new BadRequestException('Prompt não configurado');
+
     try {
-      console.log('Chave da API:', process.env.GEMINI_API_KEY ? 'Configurada' : 'Não configurada');
-      
       const response = await this.ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: "me traça uma notícia sobre o bayern de munich. notícia nova!",
-        config,
+        contents: JSON.stringify(createNewsDto),
+        config: {
+          ...config,
+          systemInstruction: prompt
+        },
       });
-      console.log(response.text);
-      
-      return { success: true, response: response.text };
+      console.log('Busca feita com sucesso');
+      return response.text || '';
+    } catch (error) {
+      console.error('Erro ao gerar conteúdo:', error);
+      return false;
+    }
+  }
+
+  verifyIfNewsIsJson(news: string) {
+    try{
+      console.log('Reconhecido como JSON');
+      return JSON.parse(news);
+    } catch (error) {
+      console.log('Não foi reconhecido como JSON');
+      return false;
+    }
+  }
+  
+  async transformNewsToJson(news: string) {
+    const jsonText: string | undefined = news?.split('```json')[1]?.split('```')[0];
+    jsonText && console.log('bloco json encontrado');
+    if(!jsonText) return false;
+    const isJson = this.verifyIfNewsIsJson(jsonText);
+    if(!isJson) return false;
+    return isJson;
+  }
+  
+  async create(createNewsDto: CreateNewsDto) {
+    try {
+      for(let i = 0; i < 3; i++) {
+        const news = await this.generateNews(createNewsDto);
+        if(news) {
+          const newsJson = await this.transformNewsToJson(news);
+          if(newsJson) return newsJson;
+        };
+        console.log('Tentativa:', i + 1);
+      }
     } catch (error) {
       console.error('Erro ao gerar conteúdo:', error);
       throw new Error(`Erro na API do Gemini: ${error.message}`);
     }
-  }
-
-  findAll() {
-    return `This action returns all news`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} news`;
-  }
-
-  update(id: number, updateNewsDto: UpdateNewsDto) {
-    return `This action updates a #${id} news`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} news`;
   }
 }
