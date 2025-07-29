@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
 import { GoogleGenAI } from "@google/genai";
@@ -34,7 +34,10 @@ export class NewsService {
         contents: JSON.stringify(createNewsDto),
         config: {
           ...config,
-          systemInstruction: prompt
+          systemInstruction: prompt,
+          thinkingConfig: {
+            thinkingBudget: -1
+          }
         },
       });
       console.log('Busca feita com sucesso');
@@ -47,8 +50,9 @@ export class NewsService {
 
   verifyIfNewsIsJson(news: string) {
     try{
+      const json = JSON.parse(news);
       console.log('Reconhecido como JSON');
-      return JSON.parse(news);
+      return json;
     } catch (error) {
       console.log('Não foi reconhecido como JSON');
       return false;
@@ -57,7 +61,7 @@ export class NewsService {
   
   async transformNewsToJson(news: string) {
     const jsonText: string | undefined = news?.split('```json')[1]?.split('```')[0];
-    jsonText && console.log('bloco json encontrado');
+    jsonText && console.log('possível bloco json encontrado');
     if(!jsonText) return false;
     const isJson = this.verifyIfNewsIsJson(jsonText);
     if(!isJson) return false;
@@ -66,7 +70,7 @@ export class NewsService {
   
   async create(createNewsDto: CreateNewsDto) {
     try {
-      for(let i = 0; i < 3; i++) {
+      for(let i = 0; i < 4; i++) {
         const news = await this.generateNews(createNewsDto);
         if(news) {
           const newsJson = await this.transformNewsToJson(news);
@@ -74,6 +78,7 @@ export class NewsService {
         };
         console.log('Tentativa:', i + 1);
       }
+      throw new NotFoundException('Não foi possível gerar uma notícia válida');
     } catch (error) {
       console.error('Erro ao gerar conteúdo:', error);
       throw new Error(`Erro na API do Gemini: ${error.message}`);
