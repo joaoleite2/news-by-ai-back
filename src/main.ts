@@ -8,7 +8,10 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  app.enableCors();
+  app.enableCors({
+    origin: ['http://localhost:3000', 'https://eai-news-jvuruij0a-joaoleite2s-projects.vercel.app'],
+    methods: ['GET', 'POST']
+  });
   
   await app.listen(process.env.PORT ?? 8080);
   console.log(`Application is running on: ${await app.getUrl()}`);
