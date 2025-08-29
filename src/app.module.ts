@@ -10,6 +10,7 @@ import { RateLimiterMiddleware } from './middleware/rate-limiter.middleware';
       isGlobal: true,
     }),
     NewsModule,
+    // Comente `RedisModule` para desabilitar o rate limiter
     RedisModule
   ],
   controllers: [],
@@ -17,8 +18,10 @@ import { RateLimiterMiddleware } from './middleware/rate-limiter.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    // Comente o `consumer` para desabilitar o rate limiter
     consumer
       .apply(RateLimiterMiddleware)
       .forRoutes('news');
   }
 }
+

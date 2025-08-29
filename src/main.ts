@@ -9,7 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://eai-news-jvuruij0a-joaoleite2s-projects.vercel.app'],
+    origin: ['http://localhost:3000', 'https://eai-news-git-main-joaoleite2s-projects.vercel.app'],
     methods: ['GET', 'POST']
   });
   
