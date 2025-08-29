@@ -7,7 +7,7 @@ import {
 import { Request, Response, NextFunction } from 'express';
 import { RedisService } from '../redis/redis.service';
 
-const DAILY_REQUEST_LIMIT = 8;
+const DAILY_REQUEST_LIMIT = 5;
 const EXPIRATION_SECONDS = 60 * 60 * 24;
 
 @Injectable()
@@ -32,7 +32,7 @@ export class RateLimiterMiddleware implements NestMiddleware {
 
     if (count >= DAILY_REQUEST_LIMIT) {
       throw new HttpException(
-        'Você atingiu o limite de 8 notícias por dia.',
+        'Você atingiu o limite de 5 notícias por dia.',
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
