@@ -7,7 +7,7 @@ import {
 import { Request, Response, NextFunction } from 'express';
 import { RedisService } from '../redis/redis.service';
 
-const DAILY_REQUEST_LIMIT = 2;
+const DAILY_REQUEST_LIMIT = 8;
 const EXPIRATION_SECONDS = 60 * 60 * 24;
 
 @Injectable()
